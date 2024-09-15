@@ -1,0 +1,18 @@
+{
+  "hasSrc": false,
+  "packages": [
+    "shadcn-ui",
+    "drizzle",
+    "kinde"
+  ],
+  "preferredPackageManager": "npm",
+  "t3": false,
+  "alias": "@",
+  "analytics": true,
+  "rootPath": "",
+  "componentLib": "shadcn-ui",
+  "driver": "sqlite",
+  "provider": "turso",
+  "orm": "drizzle",
+  "auth": "kinde"
+}

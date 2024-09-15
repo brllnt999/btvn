@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1726235822710,
+      "tag": "0000_hot_mercury",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1726283614661,
+      "tag": "0001_dapper_master_mold",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1726285863133,
+      "tag": "0002_workable_black_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1726364589913,
+      "tag": "0003_sweet_siren",
+      "breakpoints": true
+    }
+  ]
+}
