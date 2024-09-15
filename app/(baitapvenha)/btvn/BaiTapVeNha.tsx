@@ -228,7 +228,7 @@ const ResultTable = ({ values, setValues, filterData, setStep, step, results, cu
                         <Button onClick={() => setStep(1)} >
                             Back
                         </Button>
-                        <Button onClick={(e) => stepTwoSubmit(e)} disabled={pending||Object.keys(results).length>44}>
+                        <Button onClick={(e) => stepTwoSubmit(e)} disabled={pending||Object.keys(results).length<45}>
                            {pending?"Saving": "Get Results"}
                         </Button>
                     </>
