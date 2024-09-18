@@ -13,7 +13,7 @@ export const users = sqliteTable('users', {
   name: text("name"),
   email: text("email"),
   selected: text("selected",{mode:"json"}).notNull().default(sql`(json_array())`),
-  results: text("results",{mode:"json"}).notNull(),
+  results: text("results",{mode:"json"}).notNull().default(sql``),
   kindeId:text("kinde_id"),
   picture:text("picture"),
   userId: text("user_id").notNull()

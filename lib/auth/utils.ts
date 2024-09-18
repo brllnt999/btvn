@@ -52,7 +52,7 @@ export const checkAuth = async () => {
           email: session.user.email as string,
           kindeId: kindeId as string,
           picture: session.user.picture as string,
-          results: '',
+          results: '{}',
           selected: ''
         })
         console.log("new user created")

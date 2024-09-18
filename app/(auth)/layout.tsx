@@ -7,7 +7,7 @@ export default async function AuthLayout({
   children: React.ReactNode;
 }) {
   const session = await getUserAuth();
-  if (session?.session) redirect("/dashboard");
+  if (session?.session) redirect("/btvn");
 
-  return ( <div className="bg-muted h-screen pt-8">{children}</div> );
+  return ( <div className="bg-muted h-screen grid place-content-center">{children}</div> );
 }

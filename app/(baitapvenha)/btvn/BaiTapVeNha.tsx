@@ -7,52 +7,34 @@ import { materialsData } from "./data"
 import { CustomCheckbox } from "@/components/csr/CustomCheckbox"
 import SecondStep from "./SecondStep"
 import FilnalResults from "./FilnalResults"
-import { User } from "@/lib/db/schema/users"
+import {  User } from "@/lib/db/schema/users"
 import { updateUserAction } from "@/lib/actions/users"
 import { UserSelect } from "./UserDisplay"
+import { TAddOptimistic } from "./useOptimisticUsers"
 
-
-const BaiTapVeNha = ({ allUsers, session }: { allUsers: User[], session: { user: { id: string; name?: string | undefined; email?: string | undefined; }; } | null }) => {
-    const sessionUserId = session?.user.id
-    const [activeId, setActiveId] = React.useState<string>(sessionUserId as string | '')
-    const [currentUser, setCurrentUser] = React.useState<User>(allUsers.filter(user => user.kindeId === sessionUserId)[0])
-    const [groupSelected, setGroupSelected] = React.useState<string[]>(
-        currentUser.selected as string[]
-    );
-    const [results, setResults] = React.useState<{[key:string]:string}>(
-        currentUser.results as {[key:string]:string}
-    )
-    const resetData = () => {
-        setGroupSelected([])
-        setResults({})
-    }
-    React.useEffect(() => {
-        console.log('main atv id:', activeId)
-        if (activeId === "") { resetData() }
-        if (activeId !== "") {
-            setCurrentUser(allUsers.filter(user => user.kindeId === activeId)[0])
-            console.log('current User now:', currentUser)
-            setResults(currentUser.results as {[key:string]:string})
-            setGroupSelected(currentUser.selected as string[])
-        }
-    }, [activeId,setActiveId])
-   
-    const filterData = materialsData.filter(data => groupSelected.includes(data.id))
-
+const BaiTapVeNha = ({ allUsers, userId }: { allUsers: User[], userId: string }) => {
+    const [currentUser,setCurrentUser] = React.useState<User>(allUsers.filter(user=>user.kindeId===userId)[0])
+    const [selected,setSelected] = React.useState<string[]>(currentUser.selected as string[])
+    const [results,setResults] = React.useState<{[key:string]:string}>(currentUser.results as {[key:string]:string})
+    const isOwner = currentUser?.kindeId === userId
     const [step, setStep] = React.useState(1)
+    const filterData = materialsData.filter(data => selected.includes(data.id))
+    
     return (
         <div className="flex flex-cols grid sm:grid-cols-3 place-content-center">
             <div className="col-span-1 sm:col-span-2 py-6">
                 <div className="flex flex-col items-center gap-6">
-                    <div className="w-[100vw] w-4/5 flex flex-row justify-between items-center ">
-                        <p className="text-3xl font-black" >
+                    <div className="w-[90vw] md:w-4/5 flex flex-row justify-between items-center ">
+                        <p className="text-2xl font-black" >
                             {step < 3 ? `STEP ${step} / 2` : "Results"}
                         </p>
                         <div className="w-[180px] origin-right scale-75 sm:scale-1 sm:w-[300px] ">
                             <UserSelect
+                                userId={userId}
                                 allUsers={allUsers}
-                                activeId={activeId}
-                                setActiveId={setActiveId}
+                                setCurrentUser={setCurrentUser}
+                                setSelected={setSelected}
+                                setResults={setResults}
                             />
                         </div>
                     </div>
@@ -62,17 +44,16 @@ const BaiTapVeNha = ({ allUsers, session }: { allUsers: User[], session: { user:
                                 <CheckboxGroup
                                     className="gap-2 "
                                     orientation="horizontal"
-                                    value={groupSelected}
-                                    onChange={(value) => setGroupSelected([...value])}
+                                    value={selected}
+                                    onChange={(value) => setSelected([...value])}
                                 >
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                         {materialsData.map((data) => (
-
-                                            <CustomCheckbox
+                                        <CustomCheckbox
                                                 key={data.id}
                                                 value={data.id}
                                                 content={data.value}
-                                                isDisable={!groupSelected.includes(data.id) && groupSelected.length > 9}
+                                                isDisable={!selected.includes(data.id) && selected.length > 9}
                                             />
 
                                         ))}
@@ -80,10 +61,11 @@ const BaiTapVeNha = ({ allUsers, session }: { allUsers: User[], session: { user:
                                 </CheckboxGroup>
                                 :
                                 <SecondStep
-                                    groupSelected={groupSelected}
+                                    selected={selected}
                                     results={results}
                                     setResults={setResults}
-                                    currentUser={currentUser}
+                                    isDisable={!isOwner}
+
                                 />
                         }
                     </Card>
@@ -98,13 +80,14 @@ const BaiTapVeNha = ({ allUsers, session }: { allUsers: User[], session: { user:
                     />
                     :
                     <ResultTable
-                        values={groupSelected}
-                        setValues={setGroupSelected}
                         filterData={filterData}
                         setStep={setStep}
                         step={step}
                         results={results}
                         currentUser={currentUser}
+                        isOwner={isOwner}
+                        selected={selected}
+                        setSelected={setSelected}
                     />}
             </div>
         </div>
@@ -114,14 +97,18 @@ const BaiTapVeNha = ({ allUsers, session }: { allUsers: User[], session: { user:
 
 export default BaiTapVeNha
 
-export const Materials = ({ id, value, onClose, step }:
-    { id: string, value: string,  onClose: (id: string) => void, step?: number }) => {
+export const Materials = ({ id, value, onClose, step,isOwner }:
+    { id: string, value: string, onClose: (id: string) => void, step?: number,isOwner:boolean }) => {
 
     return (
 
         <>
+       
             {step === 1
-                ? <Chip onClose={() => onClose(id)} size="lg">{value}</Chip>
+                ?(isOwner
+                ?<Chip onClose={() => onClose(id)} size="lg">{value}</Chip>
+                :<Chip size="lg">{value}</Chip>)
+
                 : <Chip
                     endContent={
                         <div className="rounded-full font-bold">
@@ -136,68 +123,63 @@ export const Materials = ({ id, value, onClose, step }:
     )
 }
 
-const ResultTable = ({ values, setValues, filterData, setStep, step, results, currentUser }:
+const ResultTable = ({ filterData, setStep, step, results, currentUser, isOwner,selected,setSelected }:
     {
-        values: string[],
-        setValues: React.Dispatch<React.SetStateAction<string[]>>,
+
         filterData: { id: string; value: string }[],
         setStep: React.Dispatch<React.SetStateAction<number>>,
         step: number,
-        results: {[key:string]:string} ,
-        currentUser: User
+        results: { [key: string]: string },
+        currentUser: User,
+        isOwner: boolean,
+        selected:string[],
+        setSelected:React.Dispatch<React.SetStateAction<string[]>>
     }
 ) => {
+    const [optimisticUser,setOptimisticUser] = React.useOptimistic(currentUser)
+    const updateOptimisticUser:TAddOptimistic =(input) => {
+            setOptimisticUser({...input.data})
+    }
+    console.log(optimisticUser)
     const onClose = (id: string) => {
-        const updatedItems = values.filter(item => item !== id);
-        setValues(updatedItems)
+        const updatedItems = selected.filter(item => item !== id);
+        setSelected(updatedItems)
+        updateOptimisticUser({
+            data:{...currentUser,selected:updatedItems},
+            action:"update"
+        })
     }
 
     const [pending, startMutation] = React.useTransition()
     const stepOnesubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         e.preventDefault()
-        console.log("submit one")
-        try {
-            startMutation(async () => {
-                console.log("start mutating")
-                await updateUserAction({
-                    id: currentUser.id,
-                    name: currentUser.name,
-                    email: currentUser.email,
-                    selected: values,
-                    results: "",
-                    kindeId: currentUser.kindeId,
-                    picture: currentUser.picture,
-                })
-                console.log("updatedone")
-            })
-        } catch (error) {
-            console.log(error)
-        } 
-      pending===false && setStep(2)  
+      return setStep(2) 
+        
     }
     const stepTwoSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         e.preventDefault()
+        if (!isOwner) { return setStep(3) }
+        const pendingInput = {...currentUser,selected:selected,results:results}
         try {
             startMutation(async () => {
+                updateOptimisticUser && updateOptimisticUser({
+                    data:pendingInput,
+                    action:"update"
+                })
+                console.log("start mutating")
                 await updateUserAction({
-                    id: currentUser.id,
-                    name: currentUser.name,
-                    email: currentUser.email,
-                    selected: values,
-                    results: results,
-                    kindeId: currentUser.kindeId,
-                    picture: currentUser.picture,
+                   ...pendingInput
                 })
                 console.log("updatedone")
             })
         } catch (error) {
             console.log(error)
-        } 
-        pending===false && setStep(3) 
+        }
+        pending === false && setStep(3)
     }
 
     return (
-        <Card className="w-[90vw] sm:w-[200px] md:[300px]">
+        <Card className="w-[90vw] sm:w-[200px] md:w-[300px]">
             <CardHeader>
                 Selected {filterData ? filterData.length : "0"}/10
             </CardHeader>
@@ -211,6 +193,7 @@ const ResultTable = ({ values, setValues, filterData, setStep, step, results, cu
                                     value={data.value}
                                     onClose={onClose}
                                     step={step}
+                                    isOwner={isOwner}
                                 />
                             </div>
                         ))
@@ -220,16 +203,16 @@ const ResultTable = ({ values, setValues, filterData, setStep, step, results, cu
             <CardFooter className={step === 1 ? "flex justify-end" : "flex justify-between"}>
 
                 {step === 1 ?
-                    <Button disabled={filterData.length < 10||pending} onClick={(e) => stepOnesubmit(e)}>
-                       {pending?"Saving": "Next Step"}
+                    <Button disabled={filterData.length < 10 || pending} onClick={(e) => stepOnesubmit(e)}>
+                        {pending ? "Saving" : "Next Step"}
                     </Button>
                     :
                     <>
                         <Button onClick={() => setStep(1)} >
                             Back
                         </Button>
-                        <Button onClick={(e) => stepTwoSubmit(e)} disabled={pending||Object.keys(results).length<45}>
-                           {pending?"Saving": "Get Results"}
+                        <Button onClick={(e) => stepTwoSubmit(e)} disabled={isOwner&&(pending || Object.keys(results).length < 44)}>
+                            {pending ? "Saving" : "Get Results"}
                         </Button>
                     </>
                 }

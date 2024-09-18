@@ -1,18 +1,29 @@
 "use client"
 import { User } from '@/lib/db/schema/users'
 import { Select, SelectItem, Avatar } from "@nextui-org/react";
+import React from 'react';
 
 
-export const UserSelect = ({ allUsers, activeId, setActiveId }:
+export const UserSelect = ({ allUsers,userId,setCurrentUser,setSelected,setResults }:
     {
         allUsers: User[],
-        activeId: string,
-        setActiveId: React.Dispatch<React.SetStateAction<string>>
-    }) => {
-
-  const handleSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setActiveId(e.target.value);
-  };
+        // activeId: string,
+        // setActiveId: React.Dispatch<React.SetStateAction<string>>,
+        userId:string,
+        setCurrentUser:React.Dispatch<React.SetStateAction<User>>,
+        setSelected:React.Dispatch<React.SetStateAction<string[]>>,
+        setResults:React.Dispatch<React.SetStateAction<{[key:string]:string}>>,
+    }
+) => {
+    const[ activeId, setActiveId] =React.useState(userId)
+    const handleSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setActiveId(e.target.value);
+        const inDutyUser = allUsers.find(user=>user.kindeId===e.target.value)||null
+        inDutyUser&&setCurrentUser(inDutyUser)
+        inDutyUser&&setSelected(inDutyUser.selected as string[])
+        inDutyUser&&setResults(inDutyUser.results as {[key:string]:string})
+        console.log("onUser:",inDutyUser?.results)
+    };
     return (
         <Select
             items={allUsers}
@@ -65,7 +76,7 @@ export const UserSelect = ({ allUsers, activeId, setActiveId }:
             }}
         >
             {(user) => (
-                <SelectItem key={user.kindeId?user.kindeId:user.id} textValue={user.name ? user.name : ''}>
+                <SelectItem key={user.kindeId ? user.kindeId : user.id} textValue={user.name ? user.name : ''}>
                     <div className="flex gap-2 items-center">
                         <Avatar alt={user.name ? user.name : ''} className="flex-shrink-0" size="sm" src={user.picture ? user.picture : ''} />
                         <div className="flex flex-col">
@@ -78,3 +89,5 @@ export const UserSelect = ({ allUsers, activeId, setActiveId }:
         </Select>
     );
 }
+
+

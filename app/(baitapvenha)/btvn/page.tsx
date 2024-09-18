@@ -7,9 +7,10 @@ const page = async () => {
     await checkAuth()
     const {allUsers} = await getAllUsers()
     const {session} = await getUserAuth()
+    const userId = session?.user.id || ""
   return (
     <div>
-        <BaiTapVeNha allUsers={allUsers} session={session}/>
+        <BaiTapVeNha allUsers={allUsers} userId={userId}/>
     </div>
   )
 }

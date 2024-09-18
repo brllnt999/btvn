@@ -41,7 +41,7 @@ export const updateUserAction = async (input: UpdateUserParams) => {
   try {
     const payload = updateUserParams.parse(input);
     await updateUser(payload.id, payload);
-    
+    revalidateUsers()
   } catch (e) {
     return handleErrors(e);
   }
